@@ -40,6 +40,7 @@ void displayPlayerHand(int player) {
 		// what card is it e.g. is it a king, queen, jack or ace
 		if (playerCards[player][i] == 1) {
 			printf(" Ace");
+			CardNum = 11;
 		}
 		else if (playerCards[player][i] == 11) {
 			printf(" Jack"); 
@@ -61,24 +62,13 @@ void displayPlayerHand(int player) {
 		totalCardNum = totalCardNum + CardNum;
 	}
 
-	// ask user if they want ace to be 1 or 11
-	for (int i = 0; i < playerTrun; i++) {
+	// if hand is over 21 and they have a ace
+	for (int i = 0; i < playerTrun; i++) { 
 		CardNum = 0;
-		if (playerCards[player][i] == 1) {
-			do {
-				printf("\nDo you what the Ace to be a 1 or 11 (Enter 1 or 11)");
-				scanf_s("%d", &ace);
-				if (ace == 1)
-					CardNum = 1;
-				else if (ace == 11)
-					CardNum = 11;
-				else {
-					printf("Enter 1 or 11 for your ace");
-					ace = 0;
-				}
-			} while (ace == 0);
+		if (totalCardNum > 21) {
+			totalCardNum = totalCardNum - 11;
+			CardNum = 1;
 		}
-
 		totalCardNum = totalCardNum + CardNum;
 	}
 
@@ -166,3 +156,26 @@ void main()
 
 
 }
+
+
+
+/* ask user if they want ace to be 1 or 11
+	for (int i = 0; i < playerTrun; i++) {
+		CardNum = 0;
+		if (playerCards[player][i] == 1) {
+			do {
+				printf("\nDo you what the Ace to be a 1 or 11 (Enter 1 or 11)");
+				scanf_s("%d", &ace);
+				if (ace == 1)
+					CardNum = 1;
+				else if (ace == 11)
+					CardNum = 11;
+				else {
+					printf("Enter 1 or 11 for your ace");
+					ace = 0;
+				}
+			} while (ace == 0);
+		}
+
+		totalCardNum = totalCardNum + CardNum;
+	}*/
