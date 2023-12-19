@@ -10,6 +10,7 @@ int cardDeck[52] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
 					1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 
 					1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 
 					1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
+char cardFace[10] = "jack", king[10] = "King", queen[10] = "Queen", jack[10] = "Jack", ace[10] = "Ace";
 int cardNum = 51;
 int playerCards[4][10];
 int playerTrun = 0, whichPlayer = 0;
@@ -23,65 +24,114 @@ void DisplayDeck(int deck[52])
 	}
 }
 
-// show player hand
-void displayPlayerHand(int player) {
+// which face card is it
+int whichFaceCard(int CardNum, int i, int player) {
+	// what card is it e.g. is it a king, queen, jack or ace
+	if (playerCards[player][i] == 1) {
+		strcpy(cardFace, ace);
+		CardNum = 11;
+	}
+	else if (playerCards[player][i] == 11) {
+		strcpy(cardFace, jack);
+		CardNum = 10;
+	}
+	else if (playerCards[player][i] == 12) {
+		strcpy(cardFace, queen);
+		CardNum = 10;
+	}
+	else if (playerCards[player][i] == 13) {
+		strcpy(cardFace, king);
+		CardNum = 10;
+	}
+	else {
+		sprintf(cardFace, "%d", playerCards[player][i]);
+		CardNum = playerCards[player][i];
+	}
 
-	int totalCardNum = 0, CardNum = 0, ace = 0;
+	return CardNum;
+}
 
-	// if player one is the dealer
-	if (player == 0)
-		printf("Dealer hand -");
+// is Ace 11 or 1
+int isAce(int player, int i, int totalCardNum) {
+	// if hand is over 21 and they have a ace
+	int CardNum = 0;
+	if (playerCards[player][i] == 1)
+	{	
+		for (int i = 0; i < playerTrun; i++) {
+			CardNum = 0;
+			if (totalCardNum > 21) {
+				totalCardNum = totalCardNum - 11;
+				CardNum = 1;
+			}
+			totalCardNum = totalCardNum + CardNum;
+
+			return totalCardNum;
+		}
+	}
 	else
-		printf("Player %d hand -", player);
+	{
+		return totalCardNum;
+	}
+}
 
+
+// display the dealer hand
+void displayDealerHand(int player) {
+	printf("Dealer hand -");
+	int totalCardNum = 0, CardNum = 0;
 	for (int i = 0; i < playerTrun; i++) {
 		CardNum = 0;
 
-		// what card is it e.g. is it a king, queen, jack or ace
-		if (playerCards[player][i] == 1) {
-			printf(" Ace");
-			CardNum = 11;
+		CardNum = whichFaceCard(CardNum, i, player);
+		if (i == 1)
+		{
+			printf(" card");
 		}
-		else if (playerCards[player][i] == 11) {
-			printf(" Jack"); 
-			CardNum = 10;
-		}
-		else if (playerCards[player][i] == 12) {
-			printf(" Queen"); 
-			CardNum = 10;
-		}
-		else if (playerCards[player][i] == 13) {
-			printf(" King");
-			CardNum = 10;
-		}
-		else {
-			printf(" %d", playerCards[player][i]);
-			CardNum = playerCards[player][i];
-		}
+		else
+			printf(" %s", cardFace);
 
 		totalCardNum = totalCardNum + CardNum;
 	}
 
-	// if hand is over 21 and they have a ace
-	for (int i = 0; i < playerTrun; i++) { 
-		CardNum = 0;
-		if (totalCardNum > 21) {
-			totalCardNum = totalCardNum - 11;
-			CardNum = 1;
-		}
-		totalCardNum = totalCardNum + CardNum;
+	for (int i = 0; i < playerTrun; i++) {
+		totalCardNum = isAce(player, i, totalCardNum);
 	}
 
-	printf(" = %d", totalCardNum);
+	//printf(" = %d", totalCardNum);
 	printf("\n");
 }
 
+// display the player hand
+void displayPlayerHand(int player) {
 
-void isItAce(int CardNum, int player, int ace) {
+	int totalCardNum = 0, CardNum = 0;
 
+	// if player one is the dealer
+	if (player == 0)
+		displayDealerHand(player);
+	else {
+		printf("Player %d hand -", player);
+
+		for (int i = 0; i < playerTrun; i++) {
+			CardNum = 0;
+
+			CardNum = whichFaceCard(CardNum, i, player);
+
+			printf(" %s", cardFace);
+
+			totalCardNum = totalCardNum + CardNum;
+		}
+
+		for (int i = 0; i < playerTrun; i++) {
+			totalCardNum = isAce(player, i, totalCardNum);
+		}
+
+		printf(" = %d", totalCardNum);
+		printf("\n");
+	}
 }
 
-// hand out the cards to players
+// hand out the cards to players for frist two card
 void fristHandCardOut(int players) {
 	
 	for (int i = 0; i < 2; i++)
