@@ -10,10 +10,12 @@ int cardDeck[52] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
 					1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 
 					1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 
 					1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
+int playerTotalNum[4];
 char cardFace[10] = "jack", king[10] = "King", queen[10] = "Queen", jack[10] = "Jack", ace[10] = "Ace";
 int cardNum = 51;
 int playerCards[4][10];
-int playerTrun = 0, whichPlayer = 0;
+int whichplayerGoneBust[3];
+int playerTrun = 0, Trun = 1, howManyPlayers = -1, bust = 0;
 
 // display the deck
 void DisplayDeck(int deck[52])
@@ -74,6 +76,34 @@ int isAce(int player, int i, int totalCardNum) {
 	}
 }
 
+// who won
+void whoWon() {
+
+
+}
+
+// swap the players around as the last ones are busted and don't what to display their cards any more
+void swapRow(int player, int rowA, int rowB) {
+	int temp = 0;
+	for (int i = 0; i < 10; i++)
+	{
+		temp = playerCards[rowA][i];
+		playerCards[rowA][i] = playerCards[rowB][i];
+		playerCards[rowB][i] = temp;
+	}
+}
+
+// did the play go bust or lose
+void goneBust(int player) {
+	if (playerTotalNum[player] > 21) {
+		printf("Player %d gone Bust\n", player);
+		howManyPlayers = howManyPlayers - 1;
+ 		swapRow(player, player, 3);
+		whichplayerGoneBust[bust] = player;
+		bust++;
+	}
+}
+
 
 // display the dealer hand
 void displayDealerHand(int player) {
@@ -85,7 +115,7 @@ void displayDealerHand(int player) {
 		CardNum = whichFaceCard(CardNum, i, player);
 		if (i == 1)
 		{
-			printf(" card");
+			printf(" 'card'");
 		}
 		else
 			printf(" %s", cardFace);
@@ -125,10 +155,19 @@ void displayPlayerHand(int player) {
 		for (int i = 0; i < playerTrun; i++) {
 			totalCardNum = isAce(player, i, totalCardNum);
 		}
+		
+		playerTotalNum[player] = totalCardNum;
 
 		printf(" = %d", totalCardNum);
-		printf("\n");
+		printf("\n");		
 	}
+}
+
+// give next card out to players
+void handCardOut(int players, int whichPlayer) {
+		
+		playerCards[whichPlayer][playerTrun] = cardDeck[cardNum];
+		cardNum--;
 }
 
 // hand out the cards to players for frist two card
@@ -163,11 +202,10 @@ void shuffleCards() {
 	// DisplayDeck(cardDeck);
 }
 
-void main()
-{
-	// variables
+void main(){
 
-	int game, howManyPlayers = -1, i;
+	// variables
+	int game, i, playerOptions = 0;
 
 	/* do player what to start new game or play a previous game
 	printf("Do you want to start a new game or a previous game? (Enter 1 to start new game or Enter 2 to start save game)\n");
@@ -185,7 +223,7 @@ void main()
 		}
 		else
 		{
-			printf("there isn't enough players or to many players\n");
+			printf("There isn't enough players or to many players\n");
 			i = 0;
 		}
 	} while (i == 0);
@@ -199,8 +237,49 @@ void main()
 	for (int i = 0; i < howManyPlayers; i++)
 	{
 		displayPlayerHand(i);
+		
 	}
+
+	// do player whats a new card 
+	do {
+		for (int i = 1; i < howManyPlayers; i++){
+			printf("Do you what to Hit or Stand? (enter 1 to Hit or enter 2 to Stand)\n");
+			scanf_s("%d", &playerOptions);
+			if (playerOptions == 1)
+			{
+				printf("You Hit\n");
+				handCardOut(howManyPlayers, i);
+			}
+			else
+			{
+				printf("You Stand\n");
+			}
+		}
+		playerTrun++;
+		
+		if (playerOptions == 1 || playerOptions == 2)
+			i = 1;
+		else
+		{
+			printf("Enter Hit or to split\n");
+			i = 0;
+		}
+	} while (i == 0);
+
+	for (int i = 0; i < howManyPlayers; i++)
+	{
+		displayPlayerHand(i);
+	}printf("\n");
 	
+	for (int i = 0; i < howManyPlayers; i++)
+	{
+		goneBust(i);
+	}printf("\n");
+
+	for (int i = 0; i < howManyPlayers; i++)
+	{
+		displayPlayerHand(i);
+	}
 
 
 
@@ -209,7 +288,13 @@ void main()
 
 
 
-/* ask user if they want ace to be 1 or 11
+/* 
+
+printf("debug\n");
+
+whichPlayer = 0
+
+ask user if they want ace to be 1 or 11
 	for (int i = 0; i < playerTrun; i++) {
 		CardNum = 0;
 		if (playerCards[player][i] == 1) {
@@ -228,4 +313,13 @@ void main()
 		}
 
 		totalCardNum = totalCardNum + CardNum;
+
+
+		if (j == 0) {
+				if (playerCards[j][i] == 1 || playerCards[j][i] == 11 || playerCards[j][i] == 12 || playerCards[j][i] == 13)
+				{
+					printf("debug\n");
+				}
+			}
+
 	}*/
