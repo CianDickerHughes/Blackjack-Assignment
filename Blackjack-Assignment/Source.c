@@ -44,13 +44,12 @@ int whichFaceCard (int i, int player) {
 	}
 	else if (playerCards[player][i] == 13) {
 		strcpy(cardFace, king);
-		
+		CardNum = 10;
 	}
 	else {
 		sprintf(cardFace, "%d", playerCards[player][i]);
 		CardNum = playerCards[player][i];
 	}
-
 	return CardNum;
 }
 
@@ -83,7 +82,7 @@ int playerTotalPoints(int player) {
 	for (int i = 0; i < playerTrun; i++) {
 		CardNum = 0;
 
-		CardNum = whichFaceCard(CardNum, i, player);
+		CardNum = whichFaceCard(i, player);
 
 		totalCardNum = totalCardNum + CardNum;
 	}
@@ -158,7 +157,7 @@ void displayDealerHand(int player) {
 
 // display the player hand
 void displayPlayerHand(int player) {
-	playerTotalPoints(player);
+	
 	int totalCardNum = 0;
 
 	// if player one is the dealer
@@ -178,7 +177,7 @@ void displayPlayerHand(int player) {
 			isAce(player, i, totalCardNum);
 		}
 		
-		totalCardNum = playerTotalNum[player];
+		totalCardNum = playerTotalPoints(player);
 
 		printf(" = %d", totalCardNum);
 		printf("\n");		
@@ -227,8 +226,7 @@ void shuffleCards() {
 void main(){
 
 	// variables
-	int game, j, playerOptions = 0, playerStand = -1;
-
+	int game, j, playerOptions = 0, playerStand = -1, allPlayerStand = 0;
 	/* do player what to start new game or play a previous game
 	printf("Do you want to start a new game or a previous game? (Enter 1 to start new game or Enter 2 to start save game)\n");
 	scanf_s("%d", &game);*/
@@ -267,6 +265,7 @@ void main(){
 
 	// if all player stand
 	do {
+		allPlayerStand = 0;
 		// do player whats a new card 
 		for (int i = 1; i < howManyPlayers; i++) {
 			do {
@@ -280,6 +279,7 @@ void main(){
 				else
 				{
 					printf("You Stand\n");
+					allPlayerStand++;
 				}
 
 				if (playerOptions == 1 || playerOptions == 2) {
@@ -291,7 +291,14 @@ void main(){
 				}
 				
 			} while (playerStand == 0); printf("\n");
-		} playerTrun++;
+		} 
+		if ((allPlayerStand + 1) == howManyPlayers) {
+			j = 1;
+		}
+		else{
+			j = 0;
+		}
+		playerTrun++;
 	
 		//
 		for (int i = 0; i < howManyPlayers; i++) {
@@ -306,8 +313,10 @@ void main(){
 			whoWon(i);
 		}printf("\n");
 
-	} while(playerStand == 0);
-	printf("debug\n");
+	} while(j == 0);
+
+	printf("The Dealer turn");
+
 }
 
 
