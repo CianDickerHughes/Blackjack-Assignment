@@ -27,7 +27,8 @@ void DisplayDeck(int deck[52])
 }
 
 // which face card is it
-int whichFaceCard(int CardNum, int i, int player) {
+int whichFaceCard (int i, int player) {
+	int CardNum = 0;
 	// what card is it e.g. is it a king, queen, jack or ace
 	if (playerCards[player][i] == 1) {
 		strcpy(cardFace, ace);
@@ -43,7 +44,7 @@ int whichFaceCard(int CardNum, int i, int player) {
 	}
 	else if (playerCards[player][i] == 13) {
 		strcpy(cardFace, king);
-		CardNum = 10;
+		
 	}
 	else {
 		sprintf(cardFace, "%d", playerCards[player][i]);
@@ -74,11 +75,33 @@ int isAce(int player, int i, int totalCardNum) {
 	{
 		return totalCardNum;
 	}
+	return 0;
+}
+
+int playerTotalPoints(int player) {
+	int totalCardNum = 0, CardNum = 0;
+	for (int i = 0; i < playerTrun; i++) {
+		CardNum = 0;
+
+		CardNum = whichFaceCard(CardNum, i, player);
+
+		totalCardNum = totalCardNum + CardNum;
+	}
+
+	for (int i = 0; i < playerTrun; i++) {
+		totalCardNum = isAce(player, i, totalCardNum);
+	}
+
+	playerTotalNum[player] = totalCardNum;
+	return totalCardNum;
 }
 
 // who won
-void whoWon() {
+void whoWon(int player) {
+	if (playerTotalNum[player] == 21) {
+		printf("Player %d has Won\n", player);
 
+	}
 
 }
 
@@ -95,6 +118,7 @@ void swapRow(int player, int rowA, int rowB) {
 
 // did the play go bust or lose
 void goneBust(int player) {
+	playerTotalPoints(player);
 	if (playerTotalNum[player] > 21) {
 		printf("Player %d gone Bust\n", player);
 		howManyPlayers = howManyPlayers - 1;
@@ -102,30 +126,31 @@ void goneBust(int player) {
 		whichplayerGoneBust[bust] = player;
 		bust++;
 	}
+	if (howManyPlayers < 1) {
+		printf("House Wins");
+	}
 }
 
 
 // display the dealer hand
 void displayDealerHand(int player) {
+	playerTotalPoints(player);
 	printf("Dealer hand -");
-	int totalCardNum = 0, CardNum = 0;
+	int totalCardNum = 0;
 	for (int i = 0; i < playerTrun; i++) {
-		CardNum = 0;
-
-		CardNum = whichFaceCard(CardNum, i, player);
+		whichFaceCard(i, player);
 		if (i == 1)
 		{
 			printf(" 'card'");
 		}
 		else
 			printf(" %s", cardFace);
-
-		totalCardNum = totalCardNum + CardNum;
 	}
-
+	
 	for (int i = 0; i < playerTrun; i++) {
 		totalCardNum = isAce(player, i, totalCardNum);
 	}
+	totalCardNum = playerTotalNum[player];
 
 	//printf(" = %d", totalCardNum);
 	printf("\n");
@@ -133,8 +158,8 @@ void displayDealerHand(int player) {
 
 // display the player hand
 void displayPlayerHand(int player) {
-
-	int totalCardNum = 0, CardNum = 0;
+	playerTotalPoints(player);
+	int totalCardNum = 0;
 
 	// if player one is the dealer
 	if (player == 0)
@@ -143,20 +168,17 @@ void displayPlayerHand(int player) {
 		printf("Player %d hand -", player);
 
 		for (int i = 0; i < playerTrun; i++) {
-			CardNum = 0;
 
-			CardNum = whichFaceCard(CardNum, i, player);
+			whichFaceCard(i, player);
 
 			printf(" %s", cardFace);
-
-			totalCardNum = totalCardNum + CardNum;
 		}
 
 		for (int i = 0; i < playerTrun; i++) {
-			totalCardNum = isAce(player, i, totalCardNum);
+			isAce(player, i, totalCardNum);
 		}
 		
-		playerTotalNum[player] = totalCardNum;
+		totalCardNum = playerTotalNum[player];
 
 		printf(" = %d", totalCardNum);
 		printf("\n");		
@@ -205,7 +227,7 @@ void shuffleCards() {
 void main(){
 
 	// variables
-	int game, i, playerOptions = 0;
+	int game, j, playerOptions = 0, playerStand = -1;
 
 	/* do player what to start new game or play a previous game
 	printf("Do you want to start a new game or a previous game? (Enter 1 to start new game or Enter 2 to start save game)\n");
@@ -219,14 +241,14 @@ void main(){
 
 		if (howManyPlayers >= 2 && howManyPlayers <= 4)
 		{
-			i = 1;
+			j = 1;
 		}
 		else
 		{
 			printf("There isn't enough players or to many players\n");
-			i = 0;
+			j = 0;
 		}
-	} while (i == 0);
+	} while (j == 0);
 
 	// shuffling cards
 	printf("Dealer is shuffling the Cards and handing them out\n");
@@ -234,56 +256,58 @@ void main(){
 
 	fristHandCardOut(howManyPlayers);
 	
+	// display hand
 	for (int i = 0; i < howManyPlayers; i++)
 	{
 		displayPlayerHand(i);
-		
 	}
+	for (int i = 0; i < howManyPlayers; i++) {
+		whoWon(i);
+	}printf("\n");
 
-	// do player whats a new card 
+	// if all player stand
 	do {
-		for (int i = 1; i < howManyPlayers; i++){
-			printf("Do you what to Hit or Stand? (enter 1 to Hit or enter 2 to Stand)\n");
-			scanf_s("%d", &playerOptions);
-			if (playerOptions == 1)
-			{
-				printf("You Hit\n");
-				handCardOut(howManyPlayers, i);
-			}
-			else
-			{
-				printf("You Stand\n");
-			}
-		}
-		playerTrun++;
-		
-		if (playerOptions == 1 || playerOptions == 2)
-			i = 1;
-		else
-		{
-			printf("Enter Hit or to split\n");
-			i = 0;
-		}
-	} while (i == 0);
+		// do player whats a new card 
+		for (int i = 1; i < howManyPlayers; i++) {
+			do {
+				printf("Do you what to Hit or Stand? (enter 1 to Hit or enter 2 to Stand)\n");
+				scanf_s("%d", &playerOptions);
+				if (playerOptions == 1)
+				{
+					printf("You Hit\n");
+					handCardOut(howManyPlayers, i);
+				}
+				else
+				{
+					printf("You Stand\n");
+				}
 
-	for (int i = 0; i < howManyPlayers; i++)
-	{
-		displayPlayerHand(i);
-	}printf("\n");
+				if (playerOptions == 1 || playerOptions == 2) {
+					playerStand = 1;
+				}
+				else {
+					printf("Enter 1 to Hit or 2 to Stand\n\n");
+					playerStand = 0;
+				}
+				
+			} while (playerStand == 0); printf("\n");
+		} playerTrun++;
 	
-	for (int i = 0; i < howManyPlayers; i++)
-	{
-		goneBust(i);
-	}printf("\n");
+		//
+		for (int i = 0; i < howManyPlayers; i++) {
+			goneBust(i);
+		}printf("\n");
 
-	for (int i = 0; i < howManyPlayers; i++)
-	{
-		displayPlayerHand(i);
-	}
+		for (int i = 0; i < howManyPlayers; i++) {
+			displayPlayerHand(i);
+		}printf("\n");
 
+		for (int i = 0; i < howManyPlayers; i++) {
+			whoWon(i);
+		}printf("\n");
 
-
-
+	} while(playerStand == 0);
+	printf("debug\n");
 }
 
 
@@ -293,6 +317,11 @@ void main(){
 printf("debug\n");
 
 whichPlayer = 0
+
+for (int i = 0; i < howManyPlayers; i++)
+	{
+		displayPlayerHand(i);
+	}printf("\n");
 
 ask user if they want ace to be 1 or 11
 	for (int i = 0; i < playerTrun; i++) {
