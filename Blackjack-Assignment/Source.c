@@ -15,7 +15,7 @@ char cardFace[10] = "jack", king[10] = "King", queen[10] = "Queen", jack[10] = "
 int cardNum = 51;
 int playerCards[4][10];
 int whichplayerGoneBust[3];
-int playerTrun = 0, Trun = 1, howManyPlayers = -1, bust = 0;
+int playerTrun = 0, Trun = 1, howManyPlayers = -1, bust = 0, dealerTrun = 0, dealerTruns = 0;
 
 // display the deck
 void DisplayDeck(int deck[52])
@@ -130,7 +130,6 @@ void goneBust(int player) {
 	}
 }
 
-
 // display the dealer hand
 void displayDealerHand(int player) {
 	playerTotalPoints(player);
@@ -138,9 +137,14 @@ void displayDealerHand(int player) {
 	int totalCardNum = 0;
 	for (int i = 0; i < playerTrun; i++) {
 		whichFaceCard(i, player);
-		if (i == 1)
+		if (dealerTrun == 0)
 		{
-			printf(" 'card'");
+			if (i == 1)
+			{
+				printf(" 'card'");
+			}
+			else
+				printf(" %s", cardFace);
 		}
 		else
 			printf(" %s", cardFace);
@@ -149,8 +153,13 @@ void displayDealerHand(int player) {
 	for (int i = 0; i < playerTrun; i++) {
 		totalCardNum = isAce(player, i, totalCardNum);
 	}
-	totalCardNum = playerTotalNum[player];
-
+	
+	if (dealerTrun == 1)
+	{
+		totalCardNum = playerTotalPoints(player);
+		printf(" = %d", totalCardNum);
+	}
+	
 	//printf(" = %d", totalCardNum);
 	printf("\n");
 }
@@ -185,10 +194,22 @@ void displayPlayerHand(int player) {
 }
 
 // give next card out to players
-void handCardOut(int players, int whichPlayer) {
+void handCardOut(int whichPlayer) {
 		
 		playerCards[whichPlayer][playerTrun] = cardDeck[cardNum];
 		cardNum--;
+}
+
+void dealerBlackjack() {
+	int cardnum = whichFaceCard(0, 0);
+	if (cardnum == 10 || cardnum == 11)
+	{
+		cardnum = whichFaceCard(0, 1);
+		if (cardnum == 10 || cardnum == 11) {
+			printf("Debug\n");
+			exit(0);
+		}
+	}
 }
 
 // hand out the cards to players for frist two card
@@ -202,7 +223,7 @@ void fristHandCardOut(int players) {
 			cardNum--;
 			printf("%d - %d\n", playerCards[j][i], (j + 1));
 		}
-		playerTrun++;
+		playerTrun++; dealerTruns++;
 	}
 }
 
@@ -226,7 +247,7 @@ void shuffleCards() {
 void main(){
 
 	// variables
-	int game, j, playerOptions = 0, playerStand = -1, allPlayerStand = 0;
+	int game, j, playerOptions = 0, playerStand = -1, allPlayerStand = 0, dealerStand = 0, temp = 0;
 	/* do player what to start new game or play a previous game
 	printf("Do you want to start a new game or a previous game? (Enter 1 to start new game or Enter 2 to start save game)\n");
 	scanf_s("%d", &game);*/
@@ -263,18 +284,20 @@ void main(){
 		whoWon(i);
 	}printf("\n");
 
+	dealerBlackjack();
+
 	// if all player stand
 	do {
 		allPlayerStand = 0;
 		// do player whats a new card 
 		for (int i = 1; i < howManyPlayers; i++) {
 			do {
-				printf("Do you what to Hit or Stand? (enter 1 to Hit or enter 2 to Stand)\n");
+				printf("Do player %d what to Hit or Stand? (enter 1 to Hit or enter 2 to Stand)\n", i);
 				scanf_s("%d", &playerOptions);
 				if (playerOptions == 1)
 				{
 					printf("You Hit\n");
-					handCardOut(howManyPlayers, i);
+					handCardOut(i);
 				}
 				else
 				{
@@ -294,13 +317,14 @@ void main(){
 		} 
 		if ((allPlayerStand + 1) == howManyPlayers) {
 			j = 1;
+			playerTrun--;
 		}
 		else{
 			j = 0;
 		}
 		playerTrun++;
 	
-		//
+		//display the the players and see who gone bust or won
 		for (int i = 0; i < howManyPlayers; i++) {
 			goneBust(i);
 		}printf("\n");
@@ -315,7 +339,67 @@ void main(){
 
 	} while(j == 0);
 
-	printf("The Dealer turn");
+	// dealer turn
+	printf("The Dealer turn\n\n");
+	dealerTrun = 1;
+	for (int i = 0; i < howManyPlayers; i++) {
+		displayPlayerHand(i);
+	}printf("\n");
+	do {
+		dealerStand = 0;
+		// do dealer whats a new card 
+		do {
+			printf("Do you what to Hit or Stand? (enter 1 to Hit or enter 2 to Stand)\n");
+			scanf_s("%d", &playerOptions);
+			if (playerOptions == 1)
+			{
+				if (playerTrun == dealerTruns)
+				{
+					playerTrun++;
+				}
+				temp = playerTrun;
+				playerTrun = dealerTruns;
+				printf("You Hit\n");
+				handCardOut(0);
+				playerTrun = temp;
+			}
+			else
+			{
+				printf("You Stand\n");
+				dealerStand = 1;
+			}
+			if (playerOptions == 1 || playerOptions == 2) {
+	
+			}
+			else {
+				printf("Enter 1 to Hit or 2 to Stand\n\n");
+				dealerStand = 3;
+			}
+		} while (dealerStand == 3); printf("\n");
+		dealerTruns++;
+		if (dealerStand == 1) {
+			j = 1;
+		}
+		else {
+			j = 0;
+		}
+
+		// display the the dealer and players and see who gone bust or won
+		for (int i = 0; i < howManyPlayers; i++) {
+			goneBust(i);
+		}printf("\n");
+
+		for (int i = 0; i < howManyPlayers; i++) {
+			displayPlayerHand(i);
+		}printf("\n");
+
+		for (int i = 0; i < howManyPlayers; i++) {
+			whoWon(i);
+		}printf("\n");
+
+	} while (j == 0);
+
+	printf("debug\n");
 
 }
 
