@@ -3,6 +3,7 @@
 #include<math.h>
 #include<time.h>
 #include<stdlib.h>
+#include <stdbool.h>
 #include "Source.h"
 
 // public variables
@@ -15,7 +16,8 @@ char cardFace[10] = "jack", king[10] = "King", queen[10] = "Queen", jack[10] = "
 int cardNum = 51;
 int playerCards[4][10];
 int whichplayerGoneBust[3];
-int playerTrun = 0, Trun = 1, howManyPlayers = -1, bust = 0, dealerTrun = 0, dealerTruns = 0;
+int playerNumofCards[4] = { 0,0,0,0 };
+int playerTrun = 0, Trun = 1, howManyPlayers = -1, bust = 0, dealerTrun = 0, dealerTruns = 0, highStore = 0, wonPlayer = 0;
 
 // display the deck
 void DisplayDeck(int deck[52])
@@ -95,13 +97,50 @@ int playerTotalPoints(int player) {
 	return totalCardNum;
 }
 
-// who won
-void whoWon(int player) {
-	if (playerTotalNum[player] == 21) {
-		printf("Player %d has Won\n", player);
-
+// who won the game
+void whoWon(int player, int end) {
+	for (int i = 0; i < playerTrun; i++) {
+		if (playerCards[player][i] > 0) {
+			playerNumofCards[player]++;
+		}
 	}
 
+	if (playerTotalNum[player] == 21) {
+		if (player == 0) {
+			printf("Dealer has Won\n");
+		}
+		else {
+			printf("Player %d has Won\n", player);
+		}
+	}
+	// when the the game end how show who won
+	else if(end == true) {
+		if (playerTotalNum[player] > highStore){
+			highStore = playerTotalNum[player];
+			wonPlayer = player;	
+		} 
+		else if (playerTotalNum[player] == highStore) {
+			printf("There is a Tie\n");
+			if (playerNumofCards[player] > playerNumofCards[wonPlayer]) {
+				wonPlayer = player;
+			}
+			else if (playerNumofCards[player] < playerNumofCards[wonPlayer]) {
+				wonPlayer = wonPlayer;
+			}
+			else{
+				printf("they are Tie with player %d and %d\n", wonPlayer, player);
+			}
+		}
+
+		if ((player + 1) >= howManyPlayers) {
+			if (player == 0) {
+				printf("Dealer has Won\n");
+			}
+			else {
+				printf("Player %d has Won\n", wonPlayer);
+			}
+		}
+	}
 }
 
 // swap the players around as the last ones are busted and don't what to display their cards any more
@@ -200,13 +239,16 @@ void handCardOut(int whichPlayer) {
 		cardNum--;
 }
 
+// if dealer got a blackjack
 void dealerBlackjack() {
-	int cardnum = whichFaceCard(0, 0);
+	int cardnum = whichFaceCard(0, 0), totalNum;
 	if (cardnum == 10 || cardnum == 11)
 	{
+		totalNum = cardnum;
 		cardnum = whichFaceCard(0, 1);
-		if (cardnum == 10 || cardnum == 11) {
-			printf("Debug\n");
+		totalNum = totalNum + cardnum;
+		if (totalNum == 21) {
+			printf("Dealer has got a blackJack\n");
 			exit(0);
 		}
 	}
@@ -248,6 +290,7 @@ void main(){
 
 	// variables
 	int game, j, playerOptions = 0, playerStand = -1, allPlayerStand = 0, dealerStand = 0, temp = 0;
+	bool end = false;
 	/* do player what to start new game or play a previous game
 	printf("Do you want to start a new game or a previous game? (Enter 1 to start new game or Enter 2 to start save game)\n");
 	scanf_s("%d", &game);*/
@@ -274,6 +317,9 @@ void main(){
 	shuffleCards();
 
 	fristHandCardOut(howManyPlayers);
+
+	playerCards[0][0] = 1;
+	playerCards[0][1] = 13;
 	
 	// display hand
 	for (int i = 0; i < howManyPlayers; i++)
@@ -281,7 +327,7 @@ void main(){
 		displayPlayerHand(i);
 	}
 	for (int i = 0; i < howManyPlayers; i++) {
-		whoWon(i);
+		whoWon(i, end);
 	}printf("\n");
 
 	dealerBlackjack();
@@ -334,7 +380,7 @@ void main(){
 		}printf("\n");
 
 		for (int i = 0; i < howManyPlayers; i++) {
-			whoWon(i);
+			whoWon(i, end);
 		}printf("\n");
 
 	} while(j == 0);
@@ -392,9 +438,9 @@ void main(){
 		for (int i = 0; i < howManyPlayers; i++) {
 			displayPlayerHand(i);
 		}printf("\n");
-
+		end = true;
 		for (int i = 0; i < howManyPlayers; i++) {
-			whoWon(i);
+			whoWon(i, end);
 		}printf("\n");
 
 	} while (j == 0);
