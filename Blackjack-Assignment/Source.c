@@ -12,7 +12,7 @@ int cardDeck[52] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
 					1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 
 					1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
 int playerTotalNum[4];
-char cardFace[10] = "jack", king[10] = "King", queen[10] = "Queen", jack[10] = "Jack", ace[10] = "Ace";
+char cardFace[10] = "Joker", king[10] = "King", queen[10] = "Queen", jack[10] = "Jack", ace[10] = "Ace";
 int cardNum = 51;
 int playerCards[4][10];
 int whichplayerGoneBust[3];
@@ -245,7 +245,7 @@ void dealerBlackjack() {
 	if (cardnum == 10 || cardnum == 11)
 	{
 		totalNum = cardnum;
-		cardnum = whichFaceCard(0, 1);
+		cardnum = whichFaceCard(0, 0);
 		totalNum = totalNum + cardnum;
 		if (totalNum == 21) {
 			printf("Dealer has got a blackJack\n");
@@ -263,7 +263,6 @@ void fristHandCardOut(int players) {
 		{
 			playerCards[j][i] = cardDeck[cardNum];
 			cardNum--;
-			printf("%d - %d\n", playerCards[j][i], (j + 1));
 		}
 		playerTrun++; dealerTruns++;
 	}
@@ -286,40 +285,115 @@ void shuffleCards() {
 	// DisplayDeck(cardDeck);
 }
 
+void loadGame() {
+	FILE* game;
+
+	game = fopen("GameSave.txt", "r");
+
+	// variables
+	int cardDeck1[52], playerCards1[4][10];
+	int cardNum1 = 0, howManyPlayers1 = 0, playerTrun1 = 0;
+
+	for (int i = 0; i < 51; i++)
+	{
+		fscanf(game, "%2d", &cardDeck1[i]);
+		cardDeck[i] = cardDeck1[i];
+	}
+
+	fscanf(game, "%2d", &cardNum1);
+	cardNum = cardNum1;
+
+	fscanf(game, "%2d", &howManyPlayers1);
+	howManyPlayers = howManyPlayers1;
+
+	for (int i = 0; i < 10; i++)
+	{
+		for (int j = 0; j < howManyPlayers; j++) {
+			fscanf(game, "%2d", &playerCards1[j][i]);
+			playerCards[j][i] = playerCards1[j][i];
+		}
+	}
+
+	fscanf(game, "%2d", &playerTrun1);
+	playerTrun = playerTrun1;
+
+	fclose(game);
+}
+
+// save the game to a .txt
+void saveGame() {
+	FILE* game;
+	game = fopen("GameSave.txt", "w");
+
+	for (int i = 51; i > 0; i--) {
+		fprintf(game, "%d\n", cardDeck[i]);
+	} fprintf(game, "\n");
+
+	fprintf(game, "%d\n\n", cardNum);
+
+	fprintf(game, "%d\n\n", howManyPlayers);
+
+	for (int i = 0; i < 10; i++)
+	{
+		for (int j = 0; j < howManyPlayers; j++) {
+			fprintf(game, "%d\n", playerCards[j][i]);
+		}
+	} fprintf(game, "\n");
+
+	fprintf(game, "%d\n\n", playerTrun);
+
+	//fprintf(game, "Debug\n");
+
+	fclose(game);
+}
+
 void main(){
 
 	// variables
-	int game, j, playerOptions = 0, playerStand = -1, allPlayerStand = 0, dealerStand = 0, temp = 0;
+	int game, j, save, usersave, playerOptions = 0, playerStand = -1, allPlayerStand = 0, dealerStand = 0, temp = 0;
 	bool end = false;
-	/* do player what to start new game or play a previous game
-	printf("Do you want to start a new game or a previous game? (Enter 1 to start new game or Enter 2 to start save game)\n");
-	scanf_s("%d", &game);*/
-
-	// get how many players to play
+	// do player what to start new game or play a previous game
 	do
 	{
-		printf("How Many player are there to play (player one is the Dealer and you need 2 or 4 player to start playing)\n");
-		scanf_s("%d", &howManyPlayers);
-
-		if (howManyPlayers >= 2 && howManyPlayers <= 4)
-		{
+		printf("Do you want to start a new game or a previous game? (Enter 1 to start new game or Enter 2 to start save game)\n");
+		scanf_s("%d", &game);
+		if (game == 1 || game == 2) {
 			j = 1;
 		}
-		else
-		{
-			printf("There isn't enough players or to many players\n");
+		else {
+			printf("Enter 1 to start new game or 2 to start save game\n\n");
 			j = 0;
 		}
 	} while (j == 0);
 
-	// shuffling cards
-	printf("Dealer is shuffling the Cards and handing them out\n");
-	shuffleCards();
+	if (game == 2) {
+		loadGame();
+	}
+	else
+	{
+		// get how many players to play
+		do
+		{
+			printf("How Many player are there to play (player one is the Dealer and you need 2 or 4 player to start playing)\n");
+			scanf_s("%d", &howManyPlayers);
 
-	fristHandCardOut(howManyPlayers);
+			if (howManyPlayers >= 2 && howManyPlayers <= 4)
+			{
+				j = 1;
+			}
+			else
+			{
+				printf("There isn't enough players or to many players\n");
+				j = 0;
+			}
+		} while (j == 0);
 
-	playerCards[0][0] = 1;
-	playerCards[0][1] = 13;
+		// shuffling cards
+		printf("Dealer is shuffling the Cards and handing them out\n");
+		shuffleCards();
+
+		fristHandCardOut(howManyPlayers);
+	}
 	
 	// display hand
 	for (int i = 0; i < howManyPlayers; i++)
@@ -329,8 +403,34 @@ void main(){
 	for (int i = 0; i < howManyPlayers; i++) {
 		whoWon(i, end);
 	}printf("\n");
-
+	
 	dealerBlackjack();
+
+	// asking the user if they want to save game
+	do 
+	{
+		
+		printf("Do you want to save the Game? (1 for yes or 2 for no)\n");
+		scanf_s("%d", &save);
+		if (save == 1)
+		{
+			printf("Game has been save");
+			saveGame();
+		}
+		else {
+			printf("Game has not been save");
+		}
+
+		if (save == 1 || save == 2)
+		{
+			usersave = 1;
+		}
+		else
+		{
+			printf("Enter 1 to save game or 2 to not save game\n");
+			usersave = 0;
+		}
+	} while (usersave == 0); printf("\n");
 
 	// if all player stand
 	do {
@@ -381,7 +481,31 @@ void main(){
 
 		for (int i = 0; i < howManyPlayers; i++) {
 			whoWon(i, end);
-		}printf("\n");
+		}printf("\n"); printf("\n");
+
+		// asking the user if they want to save game
+		do
+		{
+			printf("Do you want to save the Game? (1 for yes or 2 for no)\n");
+			scanf_s("%d", &save);
+			if (save == 1)
+			{
+				printf("Game has been save");
+				saveGame();
+			}
+			else {
+				printf("Game has not been save");
+			}
+			if (save == 1 || save == 2)
+			{
+				usersave = 1;
+			}
+			else
+			{
+				printf("Enter 1 to save game or 2 to not save game\n");
+				usersave = 0;
+			}
+		} while (usersave == 0); printf("\n");
 
 	} while(j == 0);
 
@@ -443,9 +567,33 @@ void main(){
 			whoWon(i, end);
 		}printf("\n");
 
+		// asking the user if they want to save game
+		do
+		{
+			printf("Do you want to save the Game? (1 for yes or 2 for no)\n");
+			scanf_s("%d", &save);
+			if (save == 1)
+			{
+				printf("Game has been save");
+				saveGame();
+			}
+			else {
+				printf("Game has not been save");
+			}
+			if (save == 1 || save == 2)
+			{
+				usersave = 1;
+			}
+			else
+			{
+				printf("Enter 1 to save game or 2 to not save game\n");
+				usersave = 0;
+			}
+		} while (usersave == 0); printf("\n");
+
 	} while (j == 0);
 
-	printf("debug\n");
+	printf("Game has ended\n");
 
 }
 
