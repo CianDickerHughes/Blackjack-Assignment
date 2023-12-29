@@ -6,6 +6,9 @@
 #include <stdbool.h>
 #include "Source.h"
 
+// Cian Dicker-Hughes
+// G00415413@ATU.IE
+
 // public variables
 int cardDeck[52] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
 					1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 
@@ -13,11 +16,14 @@ int cardDeck[52] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
 					1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
 int playerTotalNum[4];
 char cardFace[10] = "Joker", king[10] = "King", queen[10] = "Queen", jack[10] = "Jack", ace[10] = "Ace";
+char dealerBust[10], busts[10] = " = Bust";
 int cardNum = 51;
 int playerCards[4][10];
+int playerCardSplit[4][10];
 int whichplayerGoneBust[3];
 int playerNumofCards[4] = { 0,0,0,0 };
-int playerTrun = 0, Trun = 1, howManyPlayers = -1, bust = 0, dealerTrun = 0, dealerTruns = 0, highStore = 0, wonPlayer = 0;
+int playerTrun = 0, Trun = 1, howManyPlayers = -1, bust = 0, dealerTrun = 0, dealerTruns = 0, highStore = 0, 
+wonPlayer = 0, splits[4] = { 0,0,0,0 };
 
 // display the deck
 void DisplayDeck(int deck[52])
@@ -158,9 +164,18 @@ void swapRow(int player, int rowA, int rowB) {
 void goneBust(int player) {
 	playerTotalPoints(player);
 	if (playerTotalNum[player] > 21) {
-		printf("Player %d gone Bust\n", player);
-		howManyPlayers = howManyPlayers - 1;
- 		swapRow(player, player, 3);
+		if (player == 0)
+			printf("Dealer gone Bust\n");
+		else {
+			printf("Player %d gone Bust\n", player);
+		}
+		if (player == 0) {
+			strcpy(dealerBust, busts);
+		}
+		else if (player >= 1){
+			swapRow(player, player, 3);
+			howManyPlayers = howManyPlayers - 1;
+		}
 		whichplayerGoneBust[bust] = player;
 		bust++;
 	}
@@ -198,14 +213,87 @@ void displayDealerHand(int player) {
 		totalCardNum = playerTotalPoints(player);
 		printf(" = %d", totalCardNum);
 	}
-	
-	//printf(" = %d", totalCardNum);
+
+	printf("%s", dealerBust);
+	printf("\n");
+}
+
+int whichFaceCardSplitHand(int i, int player) {
+	int CardNum = 0;
+	// what card is it e.g. is it a king, queen, jack or ace
+	if (playerCardSplit[player][i] == 1) {
+		strcpy(cardFace, ace);
+		CardNum = 11;
+	}
+	else if (playerCardSplit[player][i] == 11) {
+		strcpy(cardFace, jack);
+		CardNum = 10;
+	}
+	else if (playerCardSplit[player][i] == 12) {
+		strcpy(cardFace, queen);
+		CardNum = 10;
+	}
+	else if (playerCardSplit[player][i] == 13) {
+		strcpy(cardFace, king);
+		CardNum = 10;
+	}
+	else {
+		sprintf(cardFace, "%d", playerCardSplit[player][i]);
+		CardNum = playerCardSplit[player][i];
+	}
+	return CardNum;
+}
+
+// is Ace 11 or 1
+int isAceSplitHand(int player, int i, int totalCardNum) {
+	// if hand is over 21 and they have a ace
+	int CardNum = 0;
+	if (playerCardSplit[player][i] == 1)
+	{
+		for (int i = 0; i < playerTrun; i++) {
+			CardNum = 0;
+			if (totalCardNum > 21) {
+				totalCardNum = totalCardNum - 11;
+				CardNum = 1;
+			}
+			totalCardNum = totalCardNum + CardNum;
+
+			return totalCardNum;
+		}
+	}
+	else
+	{
+		return totalCardNum;
+	}
+	return 0;
+}
+
+void displayPlayerSplitHand(int player) {
+
+	int totalCardNum = 0;
+
+	printf("Player %d (2) hand -", player);
+
+	for (int i = 0; i < playerTrun; i++) {
+
+		whichFaceCardSplitHand(i, player);
+
+		printf(" %s", cardFace);
+	}
+
+	for (int i = 0; i < playerTrun; i++) {
+		isAceSplitHand(player, i, totalCardNum);
+	}
+
+	totalCardNum = playerTotalPoints(player);
+
+	printf(" = %d", totalCardNum);
 	printf("\n");
 }
 
 // display the player hand
 void displayPlayerHand(int player) {
-	
+
 	int totalCardNum = 0;
 
 	// if player one is the dealer
@@ -224,13 +312,18 @@ void displayPlayerHand(int player) {
 		for (int i = 0; i < playerTrun; i++) {
 			isAce(player, i, totalCardNum);
 		}
-		
+
 		totalCardNum = playerTotalPoints(player);
 
 		printf(" = %d", totalCardNum);
-		printf("\n");		
+		printf("\n");
+
+		if (splits[player] == 1) {
+			displayPlayerSplitHand(player);
+		}
 	}
 }
+
 
 // give next card out to players
 void handCardOut(int whichPlayer) {
@@ -245,7 +338,7 @@ void dealerBlackjack() {
 	if (cardnum == 10 || cardnum == 11)
 	{
 		totalNum = cardnum;
-		cardnum = whichFaceCard(0, 0);
+		cardnum = whichFaceCard(0, 1);
 		totalNum = totalNum + cardnum;
 		if (totalNum == 21) {
 			printf("Dealer has got a blackJack\n");
@@ -285,6 +378,48 @@ void shuffleCards() {
 	// DisplayDeck(cardDeck);
 }
 
+// split the player hand
+void split(int player) {
+	int playerOptions, j = 0, CardNum1, CardNum2;
+	CardNum1 = whichFaceCard(0, player);
+	CardNum2 = whichFaceCard(1, player);
+	if (CardNum1 == CardNum2)
+	{
+		if (player > 0) {
+			do {
+
+				printf("does Player %d what to Splits their cards? (1 for yes and 2 for no)\n", player);
+				scanf_s("%d", &playerOptions);
+				if (playerOptions == 1 || playerOptions == 2) {
+					j = 1;
+				}
+				else {
+					printf("Enter 1 to Split your hand or 2 to not Split your hand\n\n");
+					j = 0;
+				}
+			} while (j == 0);
+			if (playerOptions == 1) {
+				printf("You Split\n");
+				playerCardSplit[player][0] = playerCards[player][1];
+				playerTrun--;
+				handCardOut(player);
+				playerCardSplit[player][playerTrun] = cardDeck[cardNum];
+				cardNum--;
+				playerTrun++;
+				splits[player] = 1;
+			}
+			else {
+				return 0;
+			}
+		}
+		else {
+			return 0;
+		}
+	}
+
+}
+
+// loading game from .txt file from a saved game
 void loadGame() {
 	FILE* game;
 
@@ -406,10 +541,19 @@ void main(){
 	
 	dealerBlackjack();
 
+	for (int i = 0; i < howManyPlayers; i++)
+	{
+		split(i);
+	} printf("\n");
+	
+	for (int i = 0; i < howManyPlayers; i++)
+	{
+		displayPlayerHand(i);
+	}
+
 	// asking the user if they want to save game
 	do 
 	{
-		
 		printf("Do you want to save the Game? (1 for yes or 2 for no)\n");
 		scanf_s("%d", &save);
 		if (save == 1)
@@ -596,46 +740,3 @@ void main(){
 	printf("Game has ended\n");
 
 }
-
-
-
-/* 
-
-printf("debug\n");
-
-whichPlayer = 0
-
-for (int i = 0; i < howManyPlayers; i++)
-	{
-		displayPlayerHand(i);
-	}printf("\n");
-
-ask user if they want ace to be 1 or 11
-	for (int i = 0; i < playerTrun; i++) {
-		CardNum = 0;
-		if (playerCards[player][i] == 1) {
-			do {
-				printf("\nDo you what the Ace to be a 1 or 11 (Enter 1 or 11)");
-				scanf_s("%d", &ace);
-				if (ace == 1)
-					CardNum = 1;
-				else if (ace == 11)
-					CardNum = 11;
-				else {
-					printf("Enter 1 or 11 for your ace");
-					ace = 0;
-				}
-			} while (ace == 0);
-		}
-
-		totalCardNum = totalCardNum + CardNum;
-
-
-		if (j == 0) {
-				if (playerCards[j][i] == 1 || playerCards[j][i] == 11 || playerCards[j][i] == 12 || playerCards[j][i] == 13)
-				{
-					printf("debug\n");
-				}
-			}
-
-	}*/
